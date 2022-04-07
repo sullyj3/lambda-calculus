@@ -1,33 +1,31 @@
 module Lib where
 
+import Control.Monad.Combinators.Expr (Operator (..), makeExprParser)
+import Data.Text (Text)
+import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import Data.Void (Void)
-import Data.Text (Text)
-import Control.Monad.Combinators.Expr (makeExprParser, Operator(..))
 
 type Parser = Parsec Void Text
 
-data Variable = Variable Char
+newtype Variable = Variable Char
   deriving (Show, Eq)
 
-
-data Expr = Abstraction Variable Expr
-          | Var Variable
-          | Application Expr Expr
+data Expr
+  = Abstraction Variable Expr
+  | Var Variable
+  | Application Expr Expr
   deriving (Show, Eq)
-      
+
 term =
-  try (uncurry Abstraction <$> abstraction) <|>
-  try (parens expr) <|>
-  (Var <$> variable)
+  try (uncurry Abstraction <$> abstraction)
+    <|> try (parens expr)
+    <|> (Var <$> variable)
 
 expr :: Parser Expr
-expr = makeExprParser term [[ InfixL (Application <$ string "")]]
-
+expr = makeExprParser term [[InfixL (Application <$ string "")]]
 
 parens = between (single '(') (single ')')
-
 
 abstraction :: Parser (Variable, Expr)
 abstraction = do
@@ -37,7 +35,6 @@ abstraction = do
   body <- expr
   pure (argument, body)
 
-
 application :: Parser (Expr, Expr)
 application = do
   fn <- expr
@@ -45,6 +42,4 @@ application = do
   pure (fn, arg)
 
 variable :: Parser Variable
-variable = Variable <$> satisfy (`elem` ['a'..'z'])
-
-
+variable = Variable <$> satisfy (`elem` ['a' .. 'z'])
