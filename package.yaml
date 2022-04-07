@@ -25,8 +25,12 @@ dependencies:
 - parser-combinators
 - text
 
+ghc-options:
+  - -Wall
+
 default-extensions:
 - BlockArguments
+- LambdaCase
 - OverloadedStrings
 
 library:

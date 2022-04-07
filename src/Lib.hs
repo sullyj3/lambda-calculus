@@ -17,6 +17,7 @@ data Expr
   | Application Expr Expr
   deriving (Show, Eq)
 
+term :: Parser Expr
 term =
   try (uncurry Abstraction <$> abstraction)
     <|> try (parens expr)
@@ -25,13 +26,13 @@ term =
 expr :: Parser Expr
 expr = makeExprParser term [[InfixL (Application <$ string "")]]
 
+parens :: Parser a -> Parser a
 parens = between (single '(') (single ')')
 
 abstraction :: Parser (Variable, Expr)
 abstraction = do
-  single '\\'
-  argument <- variable
-  single '.'
+  argument <-
+    between (single '\\') (single '.') variable
   body <- expr
   pure (argument, body)
 

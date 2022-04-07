@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Eval
       Lib
   other-modules:
       Paths_lambda_calculus
@@ -32,7 +33,9 @@ library
       src
   default-extensions:
       BlockArguments
+      LambdaCase
       OverloadedStrings
+  ghc-options: -Wall
   build-depends:
       base >=4.7 && <5
     , megaparsec
@@ -48,8 +51,9 @@ executable lambda-calculus-exe
       app
   default-extensions:
       BlockArguments
+      LambdaCase
       OverloadedStrings
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , lambda-calculus
@@ -67,8 +71,9 @@ test-suite lambda-calculus-test
       test
   default-extensions:
       BlockArguments
+      LambdaCase
       OverloadedStrings
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , hspec
