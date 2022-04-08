@@ -22,17 +22,17 @@ testExprParser = describe "expression parser" do
     "a" `exprParsesAs` Var (Variable 'a')
 
   it "parses the identity function" do
-    "\\x.x" `exprParsesAs` (Abs $ Abstraction (Variable 'x') (Var $ Variable 'x'))
+    "\\x.x" `exprParsesAs` Abs (Abstraction (Variable 'x') (Var $ Variable 'x'))
 
   it "parses an application of a variable to another" do
-    "ab" `exprParsesAs` Application (Var $ Variable 'a') (Var $ Variable 'b')
+    "ab" `exprParsesAs` App (Application (Var $ Variable 'a') (Var $ Variable 'b'))
 
   it "parses an application of the identity function to a variable" do
-    let expected = Application (Var $ Variable 'a') (Var $ Variable 'b')
+    let expected = App $ Application (Var $ Variable 'a') (Var $ Variable 'b')
     "ab" `exprParsesAs` expected
 
   it "parses an application of an application" do
-    let expected = Application (Application (Var $ Variable 'a') (Var $ Variable 'b')) (Var $ Variable 'c')
+    let expected = App $ Application (App $ Application (Var $ Variable 'a') (Var $ Variable 'b')) (Var $ Variable 'c')
     "abc" `exprParsesAs` expected
 
   it "parses a single variable in parens" do
@@ -40,27 +40,27 @@ testExprParser = describe "expression parser" do
     "(x)" `exprParsesAs` expected
 
   it "parses an application of a variable in parens to a variable" do
-    let expected = Application (Var $ Variable 'x') (Var $ Variable 'y')
+    let expected = App $ Application (Var $ Variable 'x') (Var $ Variable 'y')
     "(x)y" `exprParsesAs` expected
 
   it "parses a triple application involving parens (1)" do
-    let expected = Application (Application (Var $ Variable 'x') (Var $ Variable 'y')) (Var $ Variable 'z')
+    let expected = App $ Application (App $ Application (Var $ Variable 'x') (Var $ Variable 'y')) (Var $ Variable 'z')
     "(x)y(z)" `exprParsesAs` expected
 
   it "parses an application of a variable to a parenthesized expression" do
-    let expected = Application
+    let expected = App $ Application
                      (Var $ Variable 'e')
-                     (Application (Var $ Variable 'f')
-                                  (Var $ Variable 'g'))
+                     (App $ Application (Var $ Variable 'f')
+                                        (Var $ Variable 'g'))
     "e(fg)" `exprParsesAs` expected
 
 parseUnsafeUnwrap :: Parser a -> Text -> a
-parseUnsafeUnwrap p s = let 
+parseUnsafeUnwrap p s = let
   Just result = parseMaybe p s
   in result
 
 reducesTo :: Text -> Text -> Expectation
-reducesTo redex reduct = eval parsedRedex `shouldBe` parsedReduct 
+reducesTo redex reduct = eval parsedRedex `shouldBe` parsedReduct
   where
   parsedRedex = parseUnsafeUnwrap expr redex
   parsedReduct = parseUnsafeUnwrap expr reduct

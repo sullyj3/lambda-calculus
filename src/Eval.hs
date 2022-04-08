@@ -1,25 +1,25 @@
 module Eval where
 
 -- TODO these should be in seperate module
-import Lib (Expr (..), Variable (..), Abstraction(..))
+import Lib
 
 eval :: Expr -> Expr
 eval =
   \case
     Abs (Abstraction v body) -> tryEtaReduce $ Abstraction v (eval body)
+    App (Application fn arg) -> tryBetaReduce $ Application (eval fn) (eval arg)
     v@(Var _) -> v
-    Application fn arg ->
-      let fn' = eval fn
-          arg' = eval arg
-       in case fn' of
-            Abs (Abstraction paramVar body) ->
-              eval $ betaReduce arg' paramVar body
-            _ -> Application fn' arg'
 
 -- TODO refactor to use these
 newtype Argument = Argument Expr
 
 newtype Body = Body Expr
+
+tryBetaReduce :: Application -> Expr
+tryBetaReduce = \case
+  Application (Abs (Abstraction paramVar body)) arg ->
+    eval $ betaReduce arg paramVar body
+  app -> App app
 
 betaReduce :: Expr -> Variable -> Expr -> Expr
 betaReduce arg paramVar body =
@@ -33,14 +33,14 @@ betaReduce arg paramVar body =
         Var v
           | paramVar == v -> arg
           | otherwise -> Var v
-        Application fn arg' -> Application (replaceIn fn) (replaceIn arg')
+        App (Application fn arg') -> App $ Application (replaceIn fn) (replaceIn arg')
 
 tryEtaReduce :: Abstraction -> Expr
 tryEtaReduce abstr@(Abstraction v body) = case body of
   -- Can't eta reduce if the function we want to reduce to is the same as the bound variable,
   -- eg \x.xx
-  Application (Var fnvar) _
+  App (Application (Var fnvar) _)
     | v == fnvar -> Abs abstr
-  Application fn (Var v')
+  App (Application fn (Var v'))
     | v == v' -> fn
   _ -> Abs abstr
