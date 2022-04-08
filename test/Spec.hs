@@ -22,7 +22,7 @@ testExprParser = describe "expression parser" do
     "a" `exprParsesAs` Var (Variable 'a')
 
   it "parses the identity function" do
-    "\\x.x" `exprParsesAs` Abstraction (Variable 'x') (Var $ Variable 'x')
+    "\\x.x" `exprParsesAs` (Abs $ Abstraction (Variable 'x') (Var $ Variable 'x'))
 
   it "parses an application of a variable to another" do
     "ab" `exprParsesAs` Application (Var $ Variable 'a') (Var $ Variable 'b')

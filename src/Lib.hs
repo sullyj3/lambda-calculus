@@ -12,8 +12,13 @@ type Parser = Parsec Void Text
 newtype Variable = Variable Char
   deriving (Show, Eq)
 
+data Abstraction = Abstraction { abstrParam :: Variable
+                               , abstrBody :: Expr 
+                               }
+  deriving (Show, Eq)
+
 data Expr
-  = Abstraction Variable Expr
+  = Abs Abstraction
   | Var Variable
   | Application Expr Expr
   deriving (Show, Eq)
@@ -22,26 +27,28 @@ data Expr
 display :: Expr -> Text
 display
   = \case
-      Abstraction param body -> "\\" <> displayVar param <> "." <> display body
+      Abs abstr -> displayAbstraction abstr
       (Var v) -> displayVar v
       (Application fn arg) -> case fn of
-        abstr@(Abstraction _ _) -> parenthesize (display abstr) <> display arg
+        Abs abstr -> parenthesize (displayAbstraction abstr) <> display arg
         Var v -> case arg of
           Var u -> displayVar v <> displayVar u
-          Abstraction _ _ -> displayVar v <> parenthesize (display arg)
+          Abs _ -> displayVar v <> parenthesize (display arg)
           Application _ _ -> displayVar v <> parenthesize (display arg)
 
         (Application _ _) -> parenthesize (display fn) <> display arg
 
   where 
-    displayVar :: Variable -> Text
     displayVar (Variable c) = T.singleton c
+
+    displayAbstraction (Abstraction param body) = 
+      "\\" <> displayVar param <> "." <> display body
 
     parenthesize t = "(" <> t <> ")"
 
 term :: Parser Expr
 term =
-  try (uncurry Abstraction <$> abstraction)
+  try (Abs <$> abstraction)
     <|> try (parens expr)
     <|> (Var <$> variable)
 
@@ -51,12 +58,12 @@ expr = makeExprParser term [[InfixL (Application <$ string "")]]
 parens :: Parser a -> Parser a
 parens = between (single '(') (single ')')
 
-abstraction :: Parser (Variable, Expr)
+abstraction :: Parser Abstraction
 abstraction = do
   argument <-
     between (single '\\') (single '.') variable
   body <- expr
-  pure (argument, body)
+  pure $ Abstraction argument body
 
 application :: Parser (Expr, Expr)
 application = do

@@ -1,18 +1,18 @@
 module Eval where
 
 -- TODO these should be in seperate module
-import Lib (Expr (..), Variable (..))
+import Lib (Expr (..), Variable (..), Abstraction(..))
 
 eval :: Expr -> Expr
 eval =
   \case
-    (Abstraction v body) -> tryEtaReduce v (eval body)
+    Abs (Abstraction v body) -> tryEtaReduce $ Abstraction v (eval body)
     v@(Var _) -> v
     Application fn arg ->
       let fn' = eval fn
           arg' = eval arg
        in case fn' of
-            Abstraction paramVar body ->
+            Abs (Abstraction paramVar body) ->
               eval $ betaReduce arg' paramVar body
             _ -> Application fn' arg'
 
@@ -23,24 +23,24 @@ newtype Body = Body Expr
 
 betaReduce :: Expr -> Variable -> Expr -> Expr
 betaReduce arg paramVar body =
-  let go = betaReduce arg paramVar
+  let replaceIn = betaReduce arg paramVar
    in case body of
-        abstr@(Abstraction innerParamVar innerBody)
+        abstr@(Abs (Abstraction innerParamVar innerBody))
           -- The inner abstraction shadows the argument we are substituting,
           -- so we should not continue substituting in its body
           | paramVar == innerParamVar -> abstr
-          | otherwise -> Abstraction innerParamVar (go innerBody)
+          | otherwise -> Abs (Abstraction innerParamVar (replaceIn innerBody))
         Var v
           | paramVar == v -> arg
           | otherwise -> Var v
-        Application fn arg' -> Application (go fn) (go arg')
+        Application fn arg' -> Application (replaceIn fn) (replaceIn arg')
 
-tryEtaReduce :: Variable -> Expr -> Expr
-tryEtaReduce v body = case body of
+tryEtaReduce :: Abstraction -> Expr
+tryEtaReduce abstr@(Abstraction v body) = case body of
   -- Can't eta reduce if the function we want to reduce to is the same as the bound variable,
   -- eg \x.xx
   Application (Var fnvar) _
-    | v == fnvar -> Abstraction v body
+    | v == fnvar -> Abs abstr
   Application fn (Var v')
     | v == v' -> fn
-  _ -> Abstraction v body
+  _ -> Abs abstr
