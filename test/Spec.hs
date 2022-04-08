@@ -99,3 +99,6 @@ testEvaluator = describe "evaluator" do
 
   it "does not eta reduce when inner function is bound" do
     "\\x.xx" `reducesTo` "\\x.xx"
+
+  it "evaluates a chain of eta reductions" do
+    "\\y.(\\a.ba)(\\x.yx)" `reducesTo` "b"
