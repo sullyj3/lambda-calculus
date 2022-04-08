@@ -80,6 +80,7 @@ testEvaluator = describe "evaluator" do
   it "evaluates application of application to variable" do
     "(ab)c" `reducesTo` "abc"
     "((\\x.x)b)c" `reducesTo` "bc"
+    "((\\x.x)(\\y.yy))c" `reducesTo` "cc"
 
   it "evaluates abstraction containing reducible body" do
     "\\x.(\\y.y)z" `reducesTo` "\\x.z"
