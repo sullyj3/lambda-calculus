@@ -12,30 +12,30 @@ type Parser = Parsec Void Text
 newtype Variable = Variable Char
   deriving (Show, Eq)
 
-data Abstraction = Abstraction
-  { abstrParam :: Variable,
-    abstrBody :: Expr
-  }
-  deriving (Show, Eq)
-
 data Application = Application
   { appFn :: Expr,
     appArg :: Expr
   }
   deriving (Show, Eq)
 
+data Abstraction = Abstraction
+  { abstrParam :: Variable,
+    abstrBody :: Expr
+  }
+  deriving (Show, Eq)
+
 data Expr
-  = Abs Abstraction
-  | Var Variable
+  = Var Variable
   | App Application
+  | Abs Abstraction
   deriving (Show, Eq)
 
 display :: Expr -> Text
 display =
   \case
-    Abs abstr -> displayAbstraction abstr
     Var v -> displayVar v
     App app -> displayApplication app
+    Abs abstr -> displayAbstraction abstr
   where
     displayVar (Variable c) = T.singleton c
 
@@ -43,14 +43,30 @@ display =
       "\\" <> displayVar param <> "." <> display body
 
     displayApplication (Application fn arg) = case fn of
-      Abs abstr -> parenthesize (displayAbstraction abstr) <> display arg
       Var v -> case arg of
         Var u -> displayVar v <> displayVar u
-        Abs _ -> displayVar v <> parenthesize (display arg)
         App (Application _ _) -> displayVar v <> parenthesize (display arg)
+        Abs _ -> displayVar v <> parenthesize (display arg)
       App (Application _ _) -> parenthesize (display fn) <> display arg
+      Abs abstr -> parenthesize (displayAbstraction abstr) <> display arg
 
     parenthesize t = "(" <> t <> ")"
+
+variable :: Parser Variable
+variable = Variable <$> satisfy (`elem` ['a' .. 'z'])
+
+application :: Parser (Expr -> Expr -> Expr)
+application = (\e1 e2 -> App (Application e1 e2)) <$ string ""
+
+abstraction :: Parser Abstraction
+abstraction = do
+  argument <-
+    between (single '\\') (single '.') variable
+  body <- expr
+  pure $ Abstraction argument body
+
+parens :: Parser a -> Parser a
+parens = between (single '(') (single ')')
 
 term :: Parser Expr
 term =
@@ -60,19 +76,3 @@ term =
 
 expr :: Parser Expr
 expr = makeExprParser term [[InfixL application]]
-
-application :: Parser (Expr -> Expr -> Expr)
-application = (\e1 e2 -> App (Application e1 e2)) <$ string ""
-
-parens :: Parser a -> Parser a
-parens = between (single '(') (single ')')
-
-abstraction :: Parser Abstraction
-abstraction = do
-  argument <-
-    between (single '\\') (single '.') variable
-  body <- expr
-  pure $ Abstraction argument body
-
-variable :: Parser Variable
-variable = Variable <$> satisfy (`elem` ['a' .. 'z'])

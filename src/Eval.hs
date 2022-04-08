@@ -6,9 +6,9 @@ import Lib
 eval :: Expr -> Expr
 eval =
   \case
-    Abs (Abstraction v body) -> tryEtaReduce $ Abstraction v (eval body)
-    App (Application fn arg) -> tryBetaReduce $ Application (eval fn) (eval arg)
     v@(Var _) -> v
+    App (Application fn arg) -> tryBetaReduce $ Application (eval fn) (eval arg)
+    Abs (Abstraction v body) -> tryEtaReduce $ Abstraction v (eval body)
 
 -- TODO refactor to use these
 newtype Argument = Argument Expr
@@ -25,15 +25,16 @@ betaReduce :: Expr -> Variable -> Expr -> Expr
 betaReduce arg paramVar body =
   let replaceIn = betaReduce arg paramVar
    in case body of
+        Var v
+          -- Found an occurrence, replace it
+          | paramVar == v -> arg
+          | otherwise -> Var v
+        App (Application fn arg') -> App $ Application (replaceIn fn) (replaceIn arg')
         abstr@(Abs (Abstraction innerParamVar innerBody))
           -- The inner abstraction shadows the argument we are substituting,
           -- so we should not continue substituting in its body
           | paramVar == innerParamVar -> abstr
           | otherwise -> Abs (Abstraction innerParamVar (replaceIn innerBody))
-        Var v
-          | paramVar == v -> arg
-          | otherwise -> Var v
-        App (Application fn arg') -> App $ Application (replaceIn fn) (replaceIn arg')
 
 tryEtaReduce :: Abstraction -> Expr
 tryEtaReduce abstr@(Abstraction v body) = case body of
