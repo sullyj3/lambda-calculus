@@ -1,7 +1,7 @@
 module Eval where
 
 -- TODO these should be in seperate module
-import Lib
+import Expr
 
 eval :: Expr -> Expr
 eval =

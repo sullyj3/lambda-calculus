@@ -26,7 +26,8 @@ source-repository head
 library
   exposed-modules:
       Eval
-      Lib
+      Expr
+      Parse
   other-modules:
       Paths_lambda_calculus
   hs-source-dirs:

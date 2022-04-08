@@ -1,9 +1,21 @@
-import Test.Hspec
-import Lib
-import Eval
-
-import Text.Megaparsec
 import Data.Text (Text)
+import Eval (eval)
+import Expr
+  ( Abstraction (Abstraction),
+    Application (Application),
+    Expr (Abs, App, Var),
+    Variable (Variable),
+  )
+import Parse (Parser, expr, parseUnsafeUnwrap)
+import Test.Hspec
+  ( Expectation,
+    SpecWith,
+    describe,
+    hspec,
+    it,
+    shouldBe,
+  )
+import Text.Megaparsec (parseMaybe)
 
 parsesAs :: (Show a, Eq a) => Parser a -> Text -> a -> Expectation
 parsesAs parser input expected =
@@ -48,22 +60,22 @@ testExprParser = describe "expression parser" do
     "(x)y(z)" `exprParsesAs` expected
 
   it "parses an application of a variable to a parenthesized expression" do
-    let expected = App $ Application
-                     (Var $ Variable 'e')
-                     (App $ Application (Var $ Variable 'f')
-                                        (Var $ Variable 'g'))
+    let expected =
+          App $
+            Application
+              (Var $ Variable 'e')
+              ( App $
+                  Application
+                    (Var $ Variable 'f')
+                    (Var $ Variable 'g')
+              )
     "e(fg)" `exprParsesAs` expected
-
-parseUnsafeUnwrap :: Parser a -> Text -> a
-parseUnsafeUnwrap p s = let
-  Just result = parseMaybe p s
-  in result
 
 reducesTo :: Text -> Text -> Expectation
 reducesTo redex reduct = eval parsedRedex `shouldBe` parsedReduct
   where
-  parsedRedex = parseUnsafeUnwrap expr redex
-  parsedReduct = parseUnsafeUnwrap expr reduct
+    parsedRedex = parseUnsafeUnwrap expr redex
+    parsedReduct = parseUnsafeUnwrap expr reduct
 
 testEvaluator :: SpecWith ()
 testEvaluator = describe "evaluator" do
