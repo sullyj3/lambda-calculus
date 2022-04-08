@@ -6,7 +6,7 @@ import Lib (Expr (..), Variable (..))
 eval :: Expr -> Expr
 eval =
   \case
-    (Abstraction v body) -> Abstraction v (eval body)
+    (Abstraction v body) -> tryEtaReduce v (eval body)
     v@(Var _) -> v
     Application fn arg ->
       let fn' = eval fn
@@ -34,3 +34,13 @@ betaReduce arg paramVar =
           | paramVar == v -> arg
           | otherwise -> (Var v)
         Application fn arg' -> Application (go fn) (go arg')
+
+tryEtaReduce :: Variable -> Expr -> Expr
+tryEtaReduce v body = case body of
+  -- Can't eta reduce if the function we want to reduce to is the same as the bound variable,
+  -- eg \x.xx
+  Application (Var fnvar) _
+    | v == fnvar -> Abstraction v body
+  Application fn (Var v')
+    | v == v' -> fn
+  _ -> Abstraction v body

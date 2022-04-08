@@ -73,13 +73,19 @@ testEvaluator = describe "evaluator" do
   it "beta reduces the identity function on itself" do
     "(\\x.x)(\\y.y)" `reducesTo` "(\\y.y)"
 
-  it "does not substitute shadowed variables" do
+  it "does not substitute shadowed variables (1)" do
     "(\\x.(\\x.xa))z" `reducesTo` "(\\x.xa)"
+
+  it "does not substitute shadowed variables (2)" do
     "(\\x.(\\x.xa)x)z" `reducesTo` "za"
 
-  it "evaluates application of application to variable" do
+  it "evaluates application of application to variable (1)" do
     "(ab)c" `reducesTo` "abc"
+
+  it "evaluates application of application to variable (2)" do
     "((\\x.x)b)c" `reducesTo` "bc"
+
+  it "evaluates application of application to variable (3)" do
     "((\\x.x)(\\y.yy))c" `reducesTo` "cc"
 
   it "evaluates abstraction containing reducible body" do
@@ -87,3 +93,9 @@ testEvaluator = describe "evaluator" do
 
   it "further reduces if possible when substituting an abstraction" do
     "(\\x.xz)(\\x.x)" `reducesTo` "z"
+
+  it "eta reduces" do
+    "\\x.ax" `reducesTo` "a"
+
+  it "does not eta reduce when inner function is bound" do
+    "\\x.xx" `reducesTo` "\\x.xx"
