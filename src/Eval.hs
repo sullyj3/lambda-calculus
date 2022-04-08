@@ -22,17 +22,17 @@ newtype Argument = Argument Expr
 newtype Body = Body Expr
 
 betaReduce :: Expr -> Variable -> Expr -> Expr
-betaReduce arg paramVar =
+betaReduce arg paramVar body =
   let go = betaReduce arg paramVar
-   in \case
-        abstr@(Abstraction innerParamVar body)
+   in case body of
+        abstr@(Abstraction innerParamVar innerBody)
           -- The inner abstraction shadows the argument we are substituting,
           -- so we should not continue substituting in its body
           | paramVar == innerParamVar -> abstr
-          | otherwise -> Abstraction innerParamVar (go body)
+          | otherwise -> Abstraction innerParamVar (go innerBody)
         Var v
           | paramVar == v -> arg
-          | otherwise -> (Var v)
+          | otherwise -> Var v
         Application fn arg' -> Application (go fn) (go arg')
 
 tryEtaReduce :: Variable -> Expr -> Expr
