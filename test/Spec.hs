@@ -1,5 +1,6 @@
 import Data.Text (Text)
 import Eval (eval)
+import qualified Expr
 import Expr
   ( Abstraction (Abstraction),
     Application (Application),
@@ -25,6 +26,7 @@ main :: IO ()
 main = hspec do
   testExprParser
   testEvaluator
+  testDisplay
 
 testExprParser :: SpecWith ()
 testExprParser = describe "expression parser" do
@@ -114,3 +116,10 @@ testEvaluator = describe "evaluator" do
 
   it "evaluates a chain of eta reductions" do
     "\\y.(\\a.ba)(\\x.yx)" `reducesTo` "b"
+
+testDisplay = describe "Expr.display" do
+  it "displays application to application correctly" do
+    let e = App $ Application 
+              (App $ Application (Var $ Variable 'a') (Var $ Variable 'b'))
+              (App $ Application (Var $ Variable 'x') (Var $ Variable 'y'))
+    Expr.display e `shouldBe` "(ab)(xy)"
