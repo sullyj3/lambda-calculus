@@ -73,6 +73,12 @@ testExprParser = describe "expression parser" do
               )
     "e(fg)" `exprParsesAs` expected
 
+  it "parses an application of an application to an application" do
+    let expected = App $ Application 
+          (App $ Application (Var $ Variable 'a') (Var $ Variable 'b'))
+          (App $ Application (Var $ Variable 'x') (Var $ Variable 'y'))
+    "(ab)(xy)" `exprParsesAs` expected
+
 reducesTo :: Text -> Text -> Expectation
 reducesTo redex reduct = eval parsedRedex `shouldBe` parsedReduct
   where
