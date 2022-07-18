@@ -41,7 +41,10 @@ display =
         Var u -> displayVar v <> displayVar u
         App (Application _ _) -> displayVar v <> parenthesize (display arg)
         Abs _ -> displayVar v <> parenthesize (display arg)
-      App (Application _ _) -> parenthesize (display fn) <> display arg
+      App (Application _ _) -> parenthesize (display fn) <> case arg of
+        App _ -> parenthesize $ display arg
+        _ -> display arg
+        
       Abs abstr -> parenthesize (displayAbstraction abstr) <> display arg
 
     parenthesize t = "(" <> t <> ")"
