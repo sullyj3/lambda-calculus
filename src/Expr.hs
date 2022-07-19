@@ -25,11 +25,10 @@ data Expr
   deriving (Show, Eq)
 
 display :: Expr -> Text
-display =
-  \case
-    Var v -> displayVar v
-    App app -> displayApplication app
-    Abs abstr -> displayAbstraction abstr
+display e = case e of
+  Var v -> displayVar v
+  App app -> displayApplication app
+  Abs abstr -> displayAbstraction abstr
   where
     displayVar (Variable c) = T.singleton c
 

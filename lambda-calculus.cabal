@@ -33,8 +33,6 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      BlockArguments
-      LambdaCase
       OverloadedStrings
   ghc-options: -Wall
   build-depends:
@@ -51,8 +49,6 @@ executable lambda-calculus-exe
   hs-source-dirs:
       app
   default-extensions:
-      BlockArguments
-      LambdaCase
       OverloadedStrings
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
@@ -71,8 +67,6 @@ test-suite lambda-calculus-test
   hs-source-dirs:
       test
   default-extensions:
-      BlockArguments
-      LambdaCase
       OverloadedStrings
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:

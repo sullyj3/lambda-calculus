@@ -1,22 +1,15 @@
 module Eval where
 
--- TODO these should be in seperate module
 import Expr
 
 eval :: Expr -> Expr
-eval =
-  \case
-    v@(Var _) -> v
-    App (Application fn arg) -> tryBetaReduce $ Application (eval fn) (eval arg)
-    Abs (Abstraction v body) -> tryEtaReduce $ Abstraction v (eval body)
-
--- TODO refactor to use these
-newtype Argument = Argument Expr
-
-newtype Body = Body Expr
+eval e = case e of
+  v@(Var _) -> v
+  App (Application fn arg) -> tryBetaReduce $ Application (eval fn) (eval arg)
+  Abs (Abstraction v body) -> tryEtaReduce $ Abstraction v (eval body)
 
 tryBetaReduce :: Application -> Expr
-tryBetaReduce = \case
+tryBetaReduce a = case a of
   Application (Abs (Abstraction paramVar body)) arg ->
     eval $ betaReduce arg paramVar body
   app -> App app
